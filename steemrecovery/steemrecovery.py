@@ -23,6 +23,12 @@ if hasattr(__builtins__, 'raw_input'):
 verbosities = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
 time_unset = [addTzInfo(datetime.utcfromtimestamp(0)),
               addTzInfo(datetime.utcfromtimestamp(-1))]
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 def passwordkey_to_key(passwordkey, account, role, prefix="STM"):
     """ Get a private key from an input that may be a key or a master
@@ -381,9 +387,4 @@ def recover_account(account):
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger(__name__)
-    formatter = logging.Formatter('%(levelname)s - %(message)s')
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
     cli()
