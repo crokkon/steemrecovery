@@ -1,5 +1,15 @@
 # Steem Account Recovery with Beem
 
+## Installation
+
+```
+pip install -U steemrecovery
+```
+
+Steemrecovery requires [beem](https://github.com/holgern/beem) >= v0.20.14.
+
+## Usage
+
 ### Step 1: Create new keys
 * **Who**: The owner of the to-be-recovered account
 * **Keys** needed: none
@@ -59,12 +69,12 @@ INFO: @crokkon requested account recovery for stmdev
 * **Keys needed**: The old and the new owner key or master password
 
 ```
-$ steemrecovery recover-account.py [account_name]
+$ steemrecovery recover-account [account_name]
 ```
 
 Sample output:
 ```
-$ steemrecovery recover_account stmdev
+$ steemrecovery recover-account stmdev
 Enter the old master password or owner key for @stmdev:
 Enter the new master password for @stmdev:
 INFO: @stmdev recovered.
