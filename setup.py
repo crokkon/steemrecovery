@@ -33,7 +33,7 @@ if __name__ == "__main__":
             'Topic :: Office/Business :: Financial',
         ],
         install_requires=[
-            'beem',
+            'beem >= 0.20.14',
         ],
         entry_points={
             'console_scripts': [
