@@ -1,9 +1,9 @@
 # SteemRecovery
 A python CLI to recover Steem accounts.
 
-Notes
+Notes:
 * If the account to be recovered was created via https://steemit.com then this tool is (probably) not suited for you. In this case, please follow the [Stolen Accounts Recovery](https://steemit.com/recover_account_step_1) instructions from Steemit.
-* Prefer a Node/JS solution? Check the recovery tools from @reazuliqbal
+* Prefer a JavaScript solution? Check the [SteemAccountRecovery](https://github.com/CodeBull/SteemAccountRecovery) tool from @CodeBull.
 
 ## Features
 
