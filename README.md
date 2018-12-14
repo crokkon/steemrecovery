@@ -1,4 +1,23 @@
-# Steem Account Recovery with Beem
+# SteemRecovery
+A python CLI to recover Steem accounts.
+
+Notes
+* If the account to be recovered was created via https://steemit.com then this tool is (probably) not suited for you. In this case, please follow the [Stolen Accounts Recovery](https://steemit.com/recover_account_step_1) instructions from Steemit.
+* Prefer a Node/JS solution? Check the recovery tools from @reazuliqbal
+
+## Features
+
+* Calculate new keys from a random or given master password
+* Request and perform the recovery of Steem accounts
+* Analyze accounts for possible hack left-overs
+  * find and cancel power-downs
+  * find and remove withdraw routes
+  * find and cancel requests to change the recovery partner
+* Support for custom Steem node URLs and Steem forks via the `--node [URL]` parameter
+* Test commands in `--dry-mode` without sending any operations to the chain
+
+The recovery of Steem accounts requires action from both the owner of the account to be recovered as well as the corresponding recovery account owner. This tool is targeted towards account creators and users who need recovery tools for own accounts or accounts created for others.
+
 
 ## Installation
 
@@ -7,6 +26,7 @@ pip install -U steemrecovery
 ```
 
 Steemrecovery requires [beem](https://github.com/holgern/beem) >= v0.20.14.
+
 
 ## Usage
 
@@ -43,13 +63,14 @@ $ steemrecovery suggest-keys stmdev
 | New public owner key | STM6ATH8dXQVUMi6rmfTYW66SZQfHGX9uyJ4YZQaJMidgxVYamdTu |
 +----------------------+-------------------------------------------------------+
 ```
-
-Forward the new **PUBLIC** owner key to the recovery partner
+Store the private master password and all private keys safely, don't publish or forward those! Forward only the new **PUBLIC** owner key to the recovery partner
 
 
 ### Step 2: Request the account recovery
 * **Who**: The owner of the corresponding recovery account
 * **Keys needed**: Active key of the recovery account
+
+This command asks for the new **public** owner key from step 1.
 
 ```
 $ steemrecovery request-recovery [account_name]
@@ -80,3 +101,47 @@ Enter the new master password for @stmdev:
 INFO: @stmdev recovered.
 INFO: @stmdev's active, posting and memo keys updated.
 ```
+
+## Analyze for hack left-overs
+
+**Who**: The owner of the recovered account
+**Keys needed**: The analysis needs no keys. The Countermeasures need owner or active keys, or the master password.
+
+```
+$ steemrecovery analyze [account_name]
+```
+
+Detects:
+* Recovery account change requests
+* Power-downs
+* Vesting withdraw routes (e.g. STEEM ending up in another account after a power-down)
+
+Sample Output:
+```
+$ steemrecovery analyze stmdev
+INFO - Last owner update: 2018-11-11 22:09:48+00:00 (26 days ago)
+INFO - Recovery account: crokkon
+INFO - Account is not powering down.
+INFO - Account has no withdraw routes set
+INFO - No pending requests to change the recovery account
+```
+
+### Countermeasures
+
+* Cancel recovery account change requests:
+```
+$ steemrecovery cancel-recovery-account-change [account_name]
+```
+
+* Remove withdraw vesting routes
+```
+$ steemrecovery remove-withdraw-vesting-routes
+```
+
+## Roadmap
+* Implement support for non-trivial recent owner authorities
+* Implement support for stopping power-downs
+* Test on Steem forks
+
+## Contributing
+PRs are welcome! Please ensure pyflakes/pep8/flake8 compatibility.

@@ -348,7 +348,7 @@ def recover_account(account):
         'extensions': [],
         "prefix": acc.steem.prefix})
 
-    # Send the recovery operations to the blockchain
+    # Send the recovery operation to the blockchain
     tb = TransactionBuilder(steem_instance=acc.steem)
     tb.appendOps([op])
     tb.appendWif(new_priv_owner_key)
@@ -376,7 +376,7 @@ def recover_account(account):
         "json_metadata": acc['json_metadata'],
         "prefix": acc.steem.prefix})
 
-    # Send the recovery operations to the blockchain
+    # Send the account_update operation to the blockchain
     tb = TransactionBuilder(steem_instance=acc.steem)
     tb.appendOps([op])
     tb.appendWif(new_priv_owner_key)
