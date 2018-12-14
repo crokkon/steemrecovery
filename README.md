@@ -10,13 +10,24 @@ Notes
 * Calculate new keys from a random or given master password
 * Request and perform the recovery of Steem accounts
 * Analyze accounts for possible hack left-overs
-  * find and cancel power-downs
+  * detect power-downs
   * find and remove withdraw routes
   * find and cancel requests to change the recovery partner
 * Support for custom Steem node URLs and Steem forks via the `--node [URL]` parameter
 * Test commands in `--dry-mode` without sending any operations to the chain
 
 The recovery of Steem accounts requires action from both the owner of the account to be recovered as well as the corresponding recovery account owner. This tool is targeted towards account creators and users who need recovery tools for own accounts or accounts created for others.
+
+
+## How does the Steem account recovery process work?
+
+As for every other crypto, whoever owns the private keys owns the account and the funds stored there. Steem is no exception there, but provides an option to recover the ownership of an account in case the keys got leaked/phished/lost. The recovery process requires the account owner to know an owner key or a master password which was the valid key/password somewhen within the last 30 days. Additionally, the recovery process has to be initiated from the recovery partner of the account to be recovered. It is the responsibility of the recovery partner to ensure that the person asking for recovery is the original owner of the account to be recovered. The recovery process then consists of 3 steps:
+
+1) The owner of the account to be recovered generates a new set of keys for the account.
+2) The recovery partner requests the recovery of the account to be recovered with the publich owner key from step 1.
+3) The owner of the account to be recovered can now recover the account with the help of both the old and the new owner key.
+
+Note that an account recovery cannot undo or revert any transfers, posts, comments or votes.
 
 
 ## Installation
