@@ -10,7 +10,7 @@ Notes:
 * Calculate new keys from a random or given master password
 * Request and perform the recovery of Steem accounts
 * Analyze accounts for possible hack left-overs
-  * detect power-downs
+  * detect and stop power-downs
   * find and remove withdraw routes
   * find and cancel requests to change the recovery partner
 * Support for custom Steem node URLs and Steem forks via the `--node [URL]` parameter
@@ -132,9 +132,15 @@ Sample Output:
 $ steemrecovery analyze stmdev
 INFO - Last owner update: 2018-11-11 22:09:48+00:00 (26 days ago)
 INFO - Recovery account: crokkon
-INFO - Account is not powering down.
-INFO - Account has no withdraw routes set
-INFO - No pending requests to change the recovery account
+WARNING - Account is currently powering down:
+WARNING - Next vesting withdrawal: 154.648882 VESTS (~0.077 STEEM) at 2019-01-04 08:58:33+00:00
+WARNING - Account has withdraw routes set:
++--------+---------+---------+-----------+
+|  From  |    To   | Percent | Auto-vest |
++--------+---------+---------+-----------+
+| stmdev | crokkon |  100.0  |   False   |
++--------+---------+---------+-----------+
+WARNING - Request to change the recovery account to @crokkon, will be effective on: 2019-01-27T09:07:06
 ```
 
 ### Countermeasures
@@ -156,7 +162,6 @@ $ steemrecovery remove-withdraw-vesting-routes [account_name]
 
 ## Roadmap
 * Implement support for non-trivial recent owner authorities
-* Implement support for stopping power-downs
 * Test on Steem forks
 
 ## Contributing

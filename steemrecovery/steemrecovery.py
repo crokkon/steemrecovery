@@ -75,7 +75,7 @@ def analyze(account):
     """Analyze an account for possible hack leftovers.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     if acc['last_owner_update'] not in time_unset:
         days = (addTzInfo(datetime.utcnow()) - \
                 acc['last_owner_update']).days
@@ -103,7 +103,6 @@ def analyze(account):
     if len(routes):
         tbl = PrettyTable(['From', 'To', 'Percent', 'Auto-vest'])
         for route in routes:
-            print(route)
             tbl.add_row([route['from_account'], route['to_account'],
                          int(route['percent']) / STEEM_1_PERCENT,
                          route['auto_vest']])
@@ -129,7 +128,7 @@ def change_recovery_account(account, new_recovery_account):
     """ Change the recovery account of ACCOUNT to NEW_RECOVERY_ACCOUNT.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     new_rec = Account(new_recovery_account)
     logger.info("About to change recovery account of @%s from %s to %s" %
                 (acc['name'], acc['recovery_account'], new_rec['name']))
@@ -147,21 +146,22 @@ def cancel_recovery_account_change(account):
     """ Cancel a pending recovery account change request for ACCOUNT.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     bc = Blockchain(steem_instance=acc.steem)
     req = bc.find_change_recovery_account_requests(acc['name'])
     if len(req) == 0:
-        logger.warning("Could not find a pending recovery account change "
-                       "request, nothing to cancel.")
+        logger.error("Could not find a pending recovery account change "
+                     "request, nothing to cancel.")
         return
-    logger.info("Found recovery account change request:")
-    logger.info(req[0])
+    logger.info("Found recovery account change request to @%s" %
+                (req[0]['recovery_account']))
     pwd = getpass("Enter master password or owner key for @%s: " %
                   (acc['name']))
     pk = passwordkey_to_key(pwd, acc['name'], role="owner",
                             prefix=acc.steem.prefix)
     acc.steem.wallet.setKeys([pk])
     acc.change_recovery_account(acc['recovery_account'])
+    logger.info("Canceled the recovery account change request.")
 
 
 @cli.command()
@@ -170,11 +170,11 @@ def remove_withdraw_vesting_routes(account):
     """ Remove all active withdraw vesting routes from ACCOUNT.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     routes = acc.get_withdraw_routes()
     if len(routes) == 0:
         logger.error("@%s has no withdraw vesting routes, nothing to "
-                     "remove.")
+                     "remove." % (acc['name']))
         return
     pwd = getpass("Enter master password or active key for @%s: " %
                   (acc['name']))
@@ -182,9 +182,11 @@ def remove_withdraw_vesting_routes(account):
                             prefix=acc.steem.prefix)
     acc.steem.wallet.setKeys([pk])
     for route in routes:
-        acc.set_withdraw_vesting_route(route['to'], percentage=0)
+        acc.set_withdraw_vesting_route(route['to_account'],
+                                       percentage=0)
         logger.info("Removed %.2f%% route to @%s" %
-                    (int(route['percent'])/STEEM_1_PERCENT), route['to'])
+                    (int(route['percent'])/STEEM_1_PERCENT,
+                    route['to_account']))
 
 
 @cli.command()
@@ -193,9 +195,10 @@ def stop_powerdown(account):
     """Stop power-down for ACCOUNT.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     if acc['next_vesting_withdrawal'] in time_unset:
-        logger.warning("Account is not powering down - nothing to do.")
+        logger.error("@%s is not powering down - nothing to do." %
+                     (acc['name']))
         return
     pwd = getpass("Enter master password or active key for @%s: " %
                   (acc['name']))
@@ -216,7 +219,7 @@ def suggest_keys(account, custom_password):
     owner of the account to be recovered.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     if acc.get_owner_history() == []:
         logger.warning("@%s has an empty owner history - recovering "
                        "this account won't be possible!" % (acc['name']))
@@ -272,7 +275,7 @@ def request_recovery(account):
     initiated/signed by the recovery partner of ACCOUNT.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
     if acc.get_owner_history() == []:
         logger.error("The owner key of @%s was not changed within "
                      "the last 30 days - recovering this account is "
@@ -327,7 +330,7 @@ def recover_account(account):
     account to be recovered.
 
     """
-    acc = Account(account)
+    acc = Account(account.replace("@", ""))
 
     if acc.get_owner_history() == []:
         logger.error("@%s has an empty owner history - recovering "
