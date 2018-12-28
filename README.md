@@ -115,8 +115,8 @@ INFO: @stmdev's active, posting and memo keys updated.
 
 ## Analyze for hack left-overs
 
-**Who**: The owner of the recovered account
-**Keys needed**: The analysis needs no keys. The Countermeasures need owner or active keys, or the master password.
+* **Who**: The owner of the recovered account
+* **Keys needed**: The analysis needs no keys. The Countermeasures need owner or active keys, or the master password.
 
 ```
 $ steemrecovery analyze [account_name]

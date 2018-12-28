@@ -72,7 +72,7 @@ def cli(node, dry_run, verbosity):
 @cli.command()
 @click.argument('account')
 def analyze(account):
-    """Analyze an account for possible hack leftovers.
+    """Analyze ACCOUNT for possible hack leftovers.
 
     """
     acc = Account(account.replace("@", ""))
@@ -84,7 +84,7 @@ def analyze(account):
     else:
         last_update = "never"
     logger.info("Last owner update: %s" % (last_update))
-    logger.info("Recovery account: %s" % (acc['recovery_account']))
+    logger.info("Recovery account: @%s" % (acc['recovery_account']))
 
     # check if the account is currently powering down
 
@@ -129,6 +129,7 @@ def change_recovery_account(account, new_recovery_account):
 
     """
     acc = Account(account.replace("@", ""))
+    # Account() lookup to ensure that the account exists
     new_rec = Account(new_recovery_account)
     logger.info("About to change recovery account of @%s from %s to %s" %
                 (acc['name'], acc['recovery_account'], new_rec['name']))
@@ -137,7 +138,10 @@ def change_recovery_account(account, new_recovery_account):
     pk = passwordkey_to_key(pwd, acc['name'], role="owner",
                             prefix=acc.steem.prefix)
     acc.steem.wallet.setKeys([pk])
-    acc.change_recovery_account(new_rec)
+    tx = acc.change_recovery_account(new_rec)
+    logger.debug(tx)
+    logger.info("Recovery account change request to @%s will be active " \
+                "in 30 days" % (new_rec['name']))
 
 
 @cli.command()
@@ -160,7 +164,8 @@ def cancel_recovery_account_change(account):
     pk = passwordkey_to_key(pwd, acc['name'], role="owner",
                             prefix=acc.steem.prefix)
     acc.steem.wallet.setKeys([pk])
-    acc.change_recovery_account(acc['recovery_account'])
+    tx = acc.change_recovery_account(acc['recovery_account'])
+    logger.debug(tx)
     logger.info("Canceled the recovery account change request.")
 
 
@@ -182,8 +187,9 @@ def remove_withdraw_vesting_routes(account):
                             prefix=acc.steem.prefix)
     acc.steem.wallet.setKeys([pk])
     for route in routes:
-        acc.set_withdraw_vesting_route(route['to_account'],
-                                       percentage=0)
+        tx = acc.set_withdraw_vesting_route(route['to_account'],
+                                            percentage=0)
+        logger.debug(tx)
         logger.info("Removed %.2f%% route to @%s" %
                     (int(route['percent'])/STEEM_1_PERCENT,
                     route['to_account']))
@@ -205,7 +211,8 @@ def stop_powerdown(account):
     pk = passwordkey_to_key(pwd, acc['name'], role="active",
                             prefix=acc.steem.prefix)
     acc.steem.wallet.setKeys([pk])
-    acc.withdraw_vesting(0, account=acc['name'])
+    tx = acc.withdraw_vesting(0, account=acc['name'])
+    logger.debug(tx)
     logger.info("Stopped power-down for @%s" % (acc['name']))
 
 
@@ -318,7 +325,8 @@ def request_recovery(account):
     tb.appendOps([op])
     tb.appendWif(recovery_ak)
     tb.sign()
-    tb.broadcast()
+    tx = tb.broadcast()
+    logger.debug(tx)
     logger.info("@%s requested account recovery for @%s:" %
           (acc['recovery_account'], acc['name']))
 
@@ -380,7 +388,8 @@ def recover_account(account):
     tb.appendWif(new_priv_owner_key)
     tb.appendWif(old_priv_owner_key)
     tb.sign()
-    tb.broadcast()
+    tx = tb.broadcast()
+    logger.debug(tx)
     logger.info("@%s recovered." % (acc['name']))
 
     # Assemble the account update operation
@@ -407,7 +416,8 @@ def recover_account(account):
     tb.appendOps([op])
     tb.appendWif(new_priv_owner_key)
     tb.sign()
-    tb.broadcast()
+    tx = tb.broadcast()
+    logger.debug(tx)
     logger.info("SUCCESS: @%s's active, posting and memo keys updated."
                 % (acc['name']))
 
