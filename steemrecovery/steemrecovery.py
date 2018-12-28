@@ -327,7 +327,7 @@ def request_recovery(account):
     tb.sign()
     tx = tb.broadcast()
     logger.debug(tx)
-    logger.info("@%s requested account recovery for @%s:" %
+    logger.info("@%s requested account recovery for @%s." %
           (acc['recovery_account'], acc['name']))
 
 
@@ -348,16 +348,20 @@ def recover_account(account):
     # ask & verify the old owner key
     old_priv_owner_key = getpass("Enter the old master password or owner "
                                  "key for @%s: " % (acc['name']))
-    old_pk = passwordkey_to_key(old_priv_owner_key, acc['name'],
-                                role="owner", prefix=acc.steem.prefix)
-    old_public_owner_key = format(old_pk.get_public(), acc.steem.prefix)
+    old_priv_owner_key = passwordkey_to_key(old_priv_owner_key,
+                                            acc['name'], role="owner",
+                                            prefix=acc.steem.prefix)
+    old_public_owner_key = format(PrivateKey(old_priv_owner_key,
+                                             prefix=acc.steem.prefix).pubkey,
+                                  acc.steem.prefix)
 
     # get the new password to prepare all new keys
     new_pwd = getpass("Enter the new master password for @%s: " %
                       (acc['name']))
     key_auths = {}
     for role in ['owner', 'active', 'posting', 'memo']:
-        pk = PasswordKey(acc['name'], new_pwd, role=role)
+        pk = PasswordKey(acc['name'], new_pwd, role=role,
+                         prefix=acc.steem.prefix)
         key_auths[role] = format(pk.get_public_key(), acc.steem.prefix)
         if role == 'owner':
             new_priv_owner_key = str(pk.get_private())
@@ -418,7 +422,7 @@ def recover_account(account):
     tb.sign()
     tx = tb.broadcast()
     logger.debug(tx)
-    logger.info("SUCCESS: @%s's active, posting and memo keys updated."
+    logger.info("@%s's active, posting and memo keys updated."
                 % (acc['name']))
 
 
