@@ -89,9 +89,11 @@ def analyze(account):
     # check if the account is currently powering down
 
     if acc['next_vesting_withdrawal'] not in time_unset:
+        vests = acc['vesting_withdraw_rate']
+        sp = acc.steem.vests_to_sp(vests.amount)
         logger.warning("Account is currently powering down:")
-        logger.warning("Next vesting withdrawal: %s at %s" %
-                       (acc['vesting_withdraw_rate'],
+        logger.warning("Next vesting withdrawal: %s (~%.3f %s) at %s" %
+                       (vests, sp, acc.steem.steem_symbol,
                         acc['next_vesting_withdrawal']))
     else:
         logger.info("Account is not powering down.")
