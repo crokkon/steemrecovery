@@ -3,7 +3,16 @@ from setuptools import setup
 VERSION = '0.1.1'
 DESCRIPTION = "A Python Steem Account Recovery CLI"
 
+
+def create_version_file(filename):
+    content = "# This file is generated from setup.py.\nVERSION = '%s'\n" % \
+              (VERSION)
+    with open(filename, 'w') as f:
+        f.write(content)
+
+
 if __name__ == "__main__":
+    create_version_file("steemrecovery/version.py")
     setup(
         name='steemrecovery',
         version=VERSION,

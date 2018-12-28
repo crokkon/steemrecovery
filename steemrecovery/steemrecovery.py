@@ -14,6 +14,7 @@ from beem.constants import STEEM_1_PERCENT
 from prettytable import PrettyTable
 from getpass import getpass
 from datetime import datetime
+from steemrecovery.version import VERSION
 
 
 # map input to raw_input for Python2
@@ -58,6 +59,7 @@ def passwordkey_to_key(passwordkey, account, role, prefix="STM"):
               help="Dry run, don't broadcast any transaction.")
 @click.option('--verbosity', '-v', type=click.Choice(verbosities),
               default='INFO', help="Verbosity (default: INFO).")
+@click.version_option(version=VERSION)
 def cli(node, dry_run, verbosity):
     numeric_loglevel = getattr(logging, verbosity.upper(), None)
     if not isinstance(numeric_loglevel, int):
@@ -181,6 +183,25 @@ def remove_withdraw_vesting_routes(account):
         acc.set_withdraw_vesting_route(route['to'], percentage=0)
         logger.info("Removed %.2f%% route to @%s" %
                     (int(route['percent'])/STEEM_1_PERCENT), route['to'])
+
+
+@cli.command()
+@click.argument("account")
+def stop_powerdown(account):
+    """Stop power-down for ACCOUNT.
+
+    """
+    acc = Account(account)
+    if acc['next_vesting_withdrawal'] in time_unset:
+        logger.warning("Account is not powering down - nothing to do.")
+        return
+    pwd = getpass("Enter master password or active key for @%s: " %
+                  (acc['name']))
+    pk = passwordkey_to_key(pwd, acc['name'], role="active",
+                            prefix=acc.steem.prefix)
+    acc.steem.wallet.setKeys([pk])
+    acc.withdraw_vesting(0, account=acc['name'])
+    logger.info("Stopped power-down for @%s" % (acc['name']))
 
 
 @cli.command()

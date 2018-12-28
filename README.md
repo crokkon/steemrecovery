@@ -139,6 +139,11 @@ INFO - No pending requests to change the recovery account
 
 ### Countermeasures
 
+* Stop power-down
+```
+$ steemrecovery stop-powerdown [account_name]
+```
+
 * Cancel recovery account change requests:
 ```
 $ steemrecovery cancel-recovery-account-change [account_name]
@@ -146,7 +151,7 @@ $ steemrecovery cancel-recovery-account-change [account_name]
 
 * Remove withdraw vesting routes
 ```
-$ steemrecovery remove-withdraw-vesting-routes
+$ steemrecovery remove-withdraw-vesting-routes [account_name]
 ```
 
 ## Roadmap
