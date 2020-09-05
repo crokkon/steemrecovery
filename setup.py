@@ -1,7 +1,7 @@
 from setuptools import setup
 
-VERSION = '0.1.2'
-DESCRIPTION = "A Python Steem Account Recovery CLI"
+VERSION = '0.1.3'
+DESCRIPTION = "A Python Steem and Hive Account Recovery CLI"
 
 
 def create_version_file(filename):
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         maintainer='crokkon',
         maintainer_email='crokkon@protonmail.com',
         url='https://github.com/crokkon/steemrecovery',
-        keywords=['steem', 'recovery'],
+        keywords=['steem', 'hive', 'recovery', 'blockchain'],
         packages=[
             "steemrecovery",
         ],
@@ -42,7 +42,7 @@ if __name__ == "__main__":
             'Topic :: Office/Business :: Financial',
         ],
         install_requires=[
-            'beem >= 0.20.14',
+            'beem >= 0.24.9',
         ],
         entry_points={
             'console_scripts': [
