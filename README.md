@@ -1,27 +1,33 @@
 # SteemRecovery
-A python CLI to recover Steem accounts.
+A python CLI to recover Steem or Hive accounts.
 
 Notes:
 * If the account to be recovered was created via https://steemit.com then this tool is (probably) not suited for you. In this case, please follow the [Stolen Accounts Recovery](https://steemit.com/recover_account_step_1) instructions from Steemit.
-* Prefer a JavaScript solution? Check the [SteemAccountRecovery](https://github.com/CodeBull/SteemAccountRecovery) tool from @CodeBull.
+* Prefer a JavaScript solution for Steem? Check the [SteemAccountRecovery](https://github.com/CodeBull/SteemAccountRecovery) tool from @CodeBull.
 
 ## Features
 
 * Calculate new keys from a random or given master password
-* Request and perform the recovery of Steem accounts
+* Request and perform the recovery of Steem and Hive accounts
 * Analyze accounts for possible hack left-overs
   * detect and stop power-downs
   * find and remove withdraw routes
   * find and cancel requests to change the recovery partner
-* Support for custom Steem node URLs and Steem forks via the `--node [URL]` parameter
+* Support for custom Steem/Hive node URLs and Steem forks via the `--node [URL]` parameter
 * Test commands in `--dry-mode` without sending any operations to the chain
 
-The recovery of Steem accounts requires action from both the owner of the account to be recovered as well as the corresponding recovery account owner. This tool is targeted towards account creators and users who need recovery tools for own accounts or accounts created for others.
+The recovery of Steem/Hive accounts requires action from both the owner of the account to be recovered as well as the corresponding recovery account owner. This tool is targeted towards account creators and users who need recovery tools for own accounts or accounts created for others.
 
+### Selecting the Hive or Steem Blockchain
 
-## How does the Steem account recovery process work?
+steemrecovery by default uses the nodes stored in the beem config (see `beempy config`). If the beem config contains Steem nodes, steemrecovery will connect to Steem, and vice versa. In order to explicitely connect to one or the other blockchain, use the `--node` parameter:
 
-As for every other crypto, whoever owns the private keys owns the account and the funds stored there. Steem is no exception there, but provides an option to recover the ownership of an account in case the keys got leaked/phished/lost. The recovery process requires the account owner to know an owner key or a master password which was the valid key/password somewhen within the last 30 days. Additionally, the recovery process has to be initiated from the recovery partner of the account to be recovered. It is the responsibility of the recovery partner to ensure that the person asking for recovery is the original owner of the account to be recovered. The recovery process then consists of 3 steps:
+* Steem: `steemrecovery --node https://api.steemit.com [command] ([args])`
+* Hive: `steemrecovery --node https://api.hive.blog [command] ([args])`
+
+## How does the Steem/Hive account recovery process work?
+
+As for every other crypto, whoever owns the private keys owns the account and the funds stored there. Steem and Hive are no exception there, but provide an option to recover the ownership of an account in case the keys got leaked/phished/lost. The recovery process requires the account owner to know an owner key or a master password which was the valid key/password somewhen within the last 30 days. Additionally, the recovery process has to be initiated from the recovery partner of the account to be recovered. It is the responsibility of the recovery partner to ensure that the person asking for recovery is the original owner of the account to be recovered. The recovery process then consists of 3 steps:
 
 1) The owner of the account to be recovered generates a new set of keys for the account.
 2) The recovery partner requests the recovery of the account to be recovered with the publich owner key from step 1.
@@ -36,7 +42,7 @@ Note that an account recovery cannot undo or revert any transfers, posts, commen
 pip install -U steemrecovery
 ```
 
-Steemrecovery requires [beem](https://github.com/holgern/beem) >= v0.20.14.
+Steemrecovery requires [beem](https://github.com/holgern/beem) >= v0.24.9.
 
 
 ## Usage
