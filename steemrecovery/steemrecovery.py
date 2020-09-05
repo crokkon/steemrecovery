@@ -5,6 +5,7 @@ import sys
 from beem import Steem
 from beem.blockchain import Blockchain
 from beem.instance import set_shared_steem_instance
+from beemstorage import InRamPlainKeyStore
 from beem.transactionbuilder import TransactionBuilder
 from beem.utils import addTzInfo
 from beemgraphenebase.account import PasswordKey, PrivateKey, PublicKey
@@ -66,6 +67,12 @@ def cli(node, dry_run, verbosity):
         raise ValueError('Invalid log level: %s' % verbosity)
     logger.setLevel(numeric_loglevel)
     stm = Steem(node=node, nobroadcast=dry_run)
+    if stm.is_steem:
+        logger.info("You're connected to a Steem blockchain node")
+    if stm.is_hive:
+        logger.info("You're connected to a Hive blockchain node")
+    # Override default key storage to in-RAM to keep keys only temporarily
+    stm.wallet.store = InRamPlainKeyStore()
     set_shared_steem_instance(stm)
 
 
@@ -90,10 +97,10 @@ def analyze(account):
 
     if acc['next_vesting_withdrawal'] not in time_unset:
         vests = acc['vesting_withdraw_rate']
-        sp = acc.steem.vests_to_sp(vests.amount)
+        sp = acc.blockchain.vests_to_sp(vests.amount)
         logger.warning("Account is currently powering down:")
         logger.warning("Next vesting withdrawal: %s (~%.3f %s) at %s" %
-                       (vests, sp, acc.steem.steem_symbol,
+                       (vests, sp, acc.blockchain.token_symbol,
                         acc['next_vesting_withdrawal']))
     else:
         logger.info("Account is not powering down.")
@@ -136,8 +143,8 @@ def change_recovery_account(account, new_recovery_account):
     pwd = getpass("Enter master password or owner key for @%s: " %
                   (acc['name']))
     pk = passwordkey_to_key(pwd, acc['name'], role="owner",
-                            prefix=acc.steem.prefix)
-    acc.steem.wallet.setKeys([pk])
+                            prefix=acc.blockchain.prefix)
+    acc.blockchain.wallet.setKeys([pk])
     tx = acc.change_recovery_account(new_rec)
     logger.debug(tx)
     logger.info("Recovery account change request to @%s will be active " \
@@ -151,7 +158,7 @@ def cancel_recovery_account_change(account):
 
     """
     acc = Account(account.replace("@", ""))
-    bc = Blockchain(steem_instance=acc.steem)
+    bc = Blockchain(blockchain_instance=acc.blockchain)
     req = bc.find_change_recovery_account_requests(acc['name'])
     if len(req) == 0:
         logger.error("Could not find a pending recovery account change "
@@ -162,8 +169,8 @@ def cancel_recovery_account_change(account):
     pwd = getpass("Enter master password or owner key for @%s: " %
                   (acc['name']))
     pk = passwordkey_to_key(pwd, acc['name'], role="owner",
-                            prefix=acc.steem.prefix)
-    acc.steem.wallet.setKeys([pk])
+                            prefix=acc.blockchain.prefix)
+    acc.blockchain.wallet.setKeys([pk])
     tx = acc.change_recovery_account(acc['recovery_account'])
     logger.debug(tx)
     logger.info("Canceled the recovery account change request.")
@@ -184,8 +191,8 @@ def remove_withdraw_vesting_routes(account):
     pwd = getpass("Enter master password or active key for @%s: " %
                   (acc['name']))
     pk = passwordkey_to_key(pwd, acc['name'], role="active",
-                            prefix=acc.steem.prefix)
-    acc.steem.wallet.setKeys([pk])
+                            prefix=acc.blockchain.prefix)
+    acc.blockchain.wallet.setKeys([pk])
     for route in routes:
         tx = acc.set_withdraw_vesting_route(route['to_account'],
                                             percentage=0)
@@ -209,8 +216,8 @@ def stop_powerdown(account):
     pwd = getpass("Enter master password or active key for @%s: " %
                   (acc['name']))
     pk = passwordkey_to_key(pwd, acc['name'], role="active",
-                            prefix=acc.steem.prefix)
-    acc.steem.wallet.setKeys([pk])
+                            prefix=acc.blockchain.prefix)
+    acc.blockchain.wallet.setKeys([pk])
     tx = acc.withdraw_vesting(0, account=acc['name'])
     logger.debug(tx)
     logger.info("Stopped power-down for @%s" % (acc['name']))
@@ -240,17 +247,17 @@ def suggest_keys(account, custom_password):
         if new_password != repMasterPwd:
             raise ValueError("The passwords do not match!")
     else:
-        new_password = "P" + str(PrivateKey(prefix=acc.steem.prefix))
+        new_password = "P" + str(PrivateKey(prefix=acc.blockchain.prefix))
 
     # Derive the new keys
     owner = PasswordKey(acc['name'], new_password, role='owner',
-                        prefix=acc.steem.prefix)
+                        prefix=acc.blockchain.prefix)
     active = PasswordKey(acc['name'], new_password, role='active',
-                         prefix=acc.steem.prefix)
+                         prefix=acc.blockchain.prefix)
     posting = PasswordKey(acc['name'], new_password, role='posting',
-                          prefix=acc.steem.prefix)
+                          prefix=acc.blockchain.prefix)
     memo = PasswordKey(acc['name'], new_password, role='memo',
-                       prefix=acc.steem.prefix)
+                       prefix=acc.blockchain.prefix)
 
     # Print results
     print("\n1.) Store the new master password and keys safely!")
@@ -270,7 +277,7 @@ def suggest_keys(account, custom_password):
                      'recovery partner'])
     t.add_row(["Account", acc['name']])
     t.add_row(["New public owner key", format(owner.get_public(),
-                                              acc.steem.prefix)])
+                                              acc.blockchain.prefix)])
     t.add_row(["Recovery partner", acc['recovery_account']])
     print(t)
 
@@ -293,8 +300,8 @@ def request_recovery(account):
     new_owner_key = input("Enter new PUBLIC owner key for @%s: " %
                           (acc['name']))
     # PublicKey call to make sure it is a valid public key
-    pk_validity_check = PublicKey(new_owner_key, prefix=acc.steem.prefix)
-    if format(pk_validity_check, acc.steem.prefix) != new_owner_key:
+    pk_validity_check = PublicKey(new_owner_key, prefix=acc.blockchain.prefix)
+    if format(pk_validity_check, acc.blockchain.prefix) != new_owner_key:
         raise ValueError("Invalid public owner key!")
 
     # Ask and verify the active key of the recovery account
@@ -303,25 +310,25 @@ def request_recovery(account):
     recovery_ak = passwordkey_to_key(recovery_ak,
                                      acc['recovery_account'],
                                      "active",
-                                     prefix=acc.steem.prefix)
+                                     prefix=acc.blockchain.prefix)
 
     # Assemble the account recovery request operation
     new_owner_authority = {
         'key_auths': [[new_owner_key, 1]],
         'account_auths': [],
         'weight_threshold': 1,
-        'prefix': acc.steem.prefix
+        'prefix': acc.blockchain.prefix
         }
     op = operations.Request_account_recovery(**{
         'account_to_recover': acc['name'],
         'recovery_account': acc['recovery_account'],
         'new_owner_authority': new_owner_authority,
         'extensions': [],
-        'prefix': acc.steem.prefix
+        'prefix': acc.blockchain.prefix
     })
 
     # Send the operation to the blockchain
-    tb = TransactionBuilder(steem_instance=acc.steem)
+    tb = TransactionBuilder(blockchain_instance=acc.steem)
     tb.appendOps([op])
     tb.appendWif(recovery_ak)
     tb.sign()
@@ -350,10 +357,10 @@ def recover_account(account):
                                  "key for @%s: " % (acc['name']))
     old_priv_owner_key = passwordkey_to_key(old_priv_owner_key,
                                             acc['name'], role="owner",
-                                            prefix=acc.steem.prefix)
+                                            prefix=acc.blockchain.prefix)
     old_public_owner_key = format(PrivateKey(old_priv_owner_key,
-                                             prefix=acc.steem.prefix).pubkey,
-                                  acc.steem.prefix)
+                                             prefix=acc.blockchain.prefix).pubkey,
+                                  acc.blockchain.prefix)
 
     # get the new password to prepare all new keys
     new_pwd = getpass("Enter the new master password for @%s: " %
@@ -361,8 +368,8 @@ def recover_account(account):
     key_auths = {}
     for role in ['owner', 'active', 'posting', 'memo']:
         pk = PasswordKey(acc['name'], new_pwd, role=role,
-                         prefix=acc.steem.prefix)
-        key_auths[role] = format(pk.get_public_key(), acc.steem.prefix)
+                         prefix=acc.blockchain.prefix)
+        key_auths[role] = format(pk.get_public_key(), acc.blockchain.prefix)
         if role == 'owner':
             new_priv_owner_key = str(pk.get_private())
 
@@ -371,23 +378,23 @@ def recover_account(account):
         "key_auths": [[old_public_owner_key, 1]],
         "account_auths": [],
         "weight_threshold": 1,
-        "prefix": acc.steem.prefix
+        "prefix": acc.blockchain.prefix
         }
     new_owner_authority = {
         "key_auths": [[key_auths['owner'], 1]],
         "account_auths": [],
         "weight_threshold": 1,
-        "prefix": acc.steem.prefix
+        "prefix": acc.blockchain.prefix
         }
     op = operations.Recover_account(**{
         'account_to_recover': acc['name'],
         'new_owner_authority': new_owner_authority,
         'recent_owner_authority': recent_owner_authority,
         'extensions': [],
-        "prefix": acc.steem.prefix})
+        "prefix": acc.blockchain.prefix})
 
     # Send the recovery operation to the blockchain
-    tb = TransactionBuilder(steem_instance=acc.steem)
+    tb = TransactionBuilder(blockchain_instance=acc.steem)
     tb.appendOps([op])
     tb.appendWif(new_priv_owner_key)
     tb.appendWif(old_priv_owner_key)
@@ -404,19 +411,19 @@ def recover_account(account):
             'key_auths': [[key_auths['active'], 1]],
             "address_auths": [],
             'weight_threshold': 1,
-            'prefix': acc.steem.prefix},
+            'prefix': acc.blockchain.prefix},
         'posting': {
             'account_auths': acc['posting']['account_auths'],
             'key_auths': [[key_auths['posting'], 1]],
             "address_auths": [],
             'weight_threshold': 1,
-            'prefix': acc.steem.prefix},
+            'prefix': acc.blockchain.prefix},
         'memo_key': key_auths['memo'],
         "json_metadata": acc['json_metadata'],
-        "prefix": acc.steem.prefix})
+        "prefix": acc.blockchain.prefix})
 
     # Send the account_update operation to the blockchain
-    tb = TransactionBuilder(steem_instance=acc.steem)
+    tb = TransactionBuilder(blockchain_instance=acc.steem)
     tb.appendOps([op])
     tb.appendWif(new_priv_owner_key)
     tb.sign()
